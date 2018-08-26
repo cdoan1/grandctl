@@ -16,16 +16,15 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/go-ini/ini"
+	"github.com/outten45/aini"
 	"github.com/spf13/cobra"
 )
 
 // iniCmd represents the ini command
 var iniCmd = &cobra.Command{
 	Use:   "ini",
-	Short: "A brief description of your command",
+	Short: "parse the HOSTS file",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -34,12 +33,21 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("ini called")
-		cfg, err := ini.Load("hosts.ini")
-		if err != nil {
-			fmt.Printf("Fail to read file: %v", err)
-			os.Exit(1)
+		v, _ := aini.NewFile("hosts.ini")
+
+		// fmt.Println(v.Groups["worker"])
+		// fmt.Println(v.Groups["master"])
+
+		for k := range v.Groups {
+			if k == "ungrouped" {
+				continue
+			}
+			fmt.Println(k)
+			hosts := v.Groups[k]
+			for host := range hosts {
+				fmt.Println(hosts[host].Name)
+			}
 		}
-		fmt.Println("App Mode:", cfg.Section("").Key("app_mode").String())
 	},
 }
 

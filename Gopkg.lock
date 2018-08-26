@@ -2,16 +2,16 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/flynn/go-shlex"
+  packages = ["."]
+  revision = "3f9db97f856818214da2e1057f8ad84803971cff"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
   version = "v1.4.7"
-
-[[projects]]
-  name = "github.com/go-ini/ini"
-  packages = ["."]
-  revision = "5cf292cae48347c2490ac1a58fe36735fb78df7e"
-  version = "v1.38.2"
 
 [[projects]]
   name = "github.com/hashicorp/hcl"
@@ -53,6 +53,12 @@
   packages = ["."]
   revision = "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/outten45/aini"
+  packages = ["."]
+  revision = "7e4ea3597d7fa2985a1bf051b855cbe5acb60753"
 
 [[projects]]
   name = "github.com/pelletier/go-toml"
@@ -127,6 +133,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "13ca5f276b1833d12b012ae41635e543dc1b8f1870841e404bed9b409e0ffed1"
+  inputs-digest = "96037bca80e04e4196aeff9b07654398fa0dcea3c6e2df4875238e4a8025eb7f"
   solver-name = "gps-cdcl"
   solver-version = 1
