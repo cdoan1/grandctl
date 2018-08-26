@@ -15,12 +15,9 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/cdoan1/grandctl/cmd"
 )
 
 func main() {
-	fmt.Printf("hello, world\n")
 	cmd.Execute()
 }
