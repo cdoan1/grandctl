@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -43,10 +44,6 @@ grandctl install --gate stable`,
 		arch := cmd.Flag("arch").Value.String()
 		fmt.Println(" arch:", arch)
 
-		if cmd.Flag("toggle").Value.String() == "true" {
-			fmt.Println(" toggle: enabled")
-		}
-
 		repo := "hyc-cloud-private-" + gate + "-docker-local.artifactory.swg-devops.com"
 		image := repo + "/ibmcom/icp-inception-" + arch + ":" + "latest"
 
@@ -70,13 +67,10 @@ grandctl install --gate stable`,
 
 // docker run -e LICENSE=accept --net=host -t -v "$(pwd)":/installer/cluster $IMAGE uninstall
 func dockerRunIcpInstall(image string) error {
-	cmdRunner := exec.Command("docker", "run", "-e", "LICENSE=accept",
-		"-e", "http_proxy=${http_proxy}",
-		"-e", "https_proxy=${https_proxy}",
-		"-e", "no_proxy=${no_proxy}",
-		"--net=host",
-		"-t",
-		"-v", "/opt/ibm/cluster:/installer/cluster", image, "install")
+	httpproxy := "http_proxy=" + os.Getenv("http_proxy")
+	httpsproxy := "https_proxy=" + os.Getenv("https_proxy")
+	noproxy := "no_proxy=" + os.Getenv("no_proxy")
+	cmdRunner := exec.Command("docker", "run", "-e", "LICENSE=accept", "-e", httpproxy, "-e", httpsproxy, "-e", noproxy, "--net=host", "-t", "-v", "/opt/ibm/cluster:/installer/cluster", image, "install")
 	cmdRunner.Dir = "/opt/ibm/cluster"
 	var stdout, stderr []byte
 	var errStdout, errStderr error
@@ -85,11 +79,11 @@ func dockerRunIcpInstall(image string) error {
 	cmdRunner.Start()
 
 	go func() {
-		stdout, errStdout = copyAndCapture(os.Stdout, stdoutIn)
+		stdout, errStdout = copyAndCapture1(os.Stdout, stdoutIn)
 	}()
 
 	go func() {
-		stderr, errStderr = copyAndCapture(os.Stderr, stderrIn)
+		stderr, errStderr = copyAndCapture1(os.Stderr, stderrIn)
 	}()
 
 	err := cmdRunner.Wait()
@@ -106,28 +100,28 @@ func dockerRunIcpInstall(image string) error {
 }
 
 // https://github.com/kjk/go-cookbook/blob/master/LICENSE
-// func copyAndCapture1(w io.Writer, r io.Reader) ([]byte, error) {
-// 	var out []byte
-// 	buf := make([]byte, 1024, 1024)
-// 	for {
-// 		n, err := r.Read(buf[:])
-// 		if n > 0 {
-// 			d := buf[:n]
-// 			out = append(out, d...)
-// 			_, err := w.Write(d)
-// 			if err != nil {
-// 				return out, err
-// 			}
-// 		}
-// 		if err != nil {
-// 			// Read returns io.EOF at the end of file, which is not an error for us
-// 			if err == io.EOF {
-// 				err = nil
-// 			}
-// 			return out, err
-// 		}
-// 	}
-// }
+func copyAndCapture1(w io.Writer, r io.Reader) ([]byte, error) {
+	var out []byte
+	buf := make([]byte, 1024, 1024)
+	for {
+		n, err := r.Read(buf[:])
+		if n > 0 {
+			d := buf[:n]
+			out = append(out, d...)
+			_, err := w.Write(d)
+			if err != nil {
+				return out, err
+			}
+		}
+		if err != nil {
+			// Read returns io.EOF at the end of file, which is not an error for us
+			if err == io.EOF {
+				err = nil
+			}
+			return out, err
+		}
+	}
+}
 
 func init() {
 	rootCmd.AddCommand(installCmd)
