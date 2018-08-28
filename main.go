@@ -19,7 +19,6 @@ import (
 )
 
 var (
-
 	// VERSION is set during build
 	VERSION = "0.1.0"
 )
