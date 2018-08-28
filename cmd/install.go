@@ -20,7 +20,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
+	"github.com/outten45/aini"
 	"github.com/spf13/cobra"
 )
 
@@ -57,20 +59,51 @@ grandctl install --gate stable`,
 		fmt.Println("")
 
 		fmt.Println("local: install inception")
-		uninstall := dockerRunIcpInstall(image)
-		if uninstall != nil {
+		icpinstall := dockerRunIcpInstall(image)
+		if icpinstall != nil {
 			fmt.Println("Error !!!")
 		}
 
 	},
 }
 
+func getHostList() (string, error) {
+	v, _ := aini.NewFile("/opt/ibm/cluster/hosts")
+
+	hostList := []string{}
+
+	for k := range v.Groups {
+		if k == "ungrouped" {
+			continue
+		}
+		fmt.Println(k)
+		hosts := v.Groups[k]
+		for host := range hosts {
+			// fmt.Println(hosts[host].Name)
+			hostList = append(hostList, hosts[host].Name)
+		}
+	}
+
+	str := strings.Join(hostList, ",")
+
+	// fmt.Println("hostList:", hostList)
+	// fmt.Println("str:", str)
+
+	return str, nil
+}
+
 // docker run -e LICENSE=accept --net=host -t -v "$(pwd)":/installer/cluster $IMAGE uninstall
 func dockerRunIcpInstall(image string) error {
 	httpproxy := "http_proxy=" + os.Getenv("http_proxy")
 	httpsproxy := "https_proxy=" + os.Getenv("https_proxy")
-	noproxy := "no_proxy=" + os.Getenv("no_proxy")
-	cmdRunner := exec.Command("docker", "run", "-e", "LICENSE=accept", "-e", httpproxy, "-e", httpsproxy, "-e", noproxy, "--net=host", "-t", "-v", "/opt/ibm/cluster:/installer/cluster", image, "install")
+	noproxy := os.Getenv("no_proxy")
+	if noproxy == "" {
+		hosts, _ := getHostList()
+		fmt.Println("hosts:", hosts)
+		noproxy = "127.0.0.1,mycluster.icp," + hosts
+	}
+	fmt.Println(httpproxy, httpsproxy, noproxy)
+	cmdRunner := exec.Command("docker", "run", "-e", "LICENSE=accept", "-e", httpproxy, "-e", httpsproxy, "-e", "no_proxy="+noproxy, "--net=host", "-t", "-v", "/opt/ibm/cluster:/installer/cluster", image, "install")
 	cmdRunner.Dir = "/opt/ibm/cluster"
 	var stdout, stderr []byte
 	var errStdout, errStderr error
