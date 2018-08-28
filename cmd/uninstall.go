@@ -65,14 +65,14 @@ grandctl uninstall --gate stable`,
 			fmt.Println("Error occurred!!!")
 		}
 
-		fmt.Println("local: inception uninstall ")
-		// uninstall := dockerRunIcpUninstall(image)
-		// if uninstall != nil {
-		// 	fmt.Println("Error !!!")
-		// }
+		fmt.Println("local: uninstall inception")
+		uninstall := dockerRunIcpUninstall(image)
+		if uninstall != nil {
+			fmt.Println("Error !!!")
+		}
 
 		// local: docker clean up
-		fmt.Println("local: docker ps -a -q")
+		fmt.Println("local: clean up docker containers and images")
 		clean := dockerRemoveContainer()
 		if clean != nil {
 			fmt.Println("docker rm containers failed!!!")
@@ -84,9 +84,10 @@ grandctl uninstall --gate stable`,
 	},
 }
 
+// for now, lets just run this local shell
 func dockerRemoveContainer() error {
-	cmdRunner := exec.Command("docker", "ps", "-a", "-q")
-	cmdRunner.Dir = "/opt/ibm/cluster"
+	cmdRunner := exec.Command("clean-remote-3.1.0.sh")
+	cmdRunner.Dir = "/root/poc-deployer/src"
 	var stdout, stderr []byte
 	var errStdout, errStderr error
 	stdoutIn, _ := cmdRunner.StdoutPipe()
