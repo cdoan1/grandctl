@@ -18,6 +18,12 @@ import (
 	"github.com/cdoan1/grandctl/cmd"
 )
 
+var (
+
+	// VERSION is set during build
+	VERSION = "0.1.0"
+)
+
 func main() {
-	cmd.Execute()
+	cmd.Execute(VERSION)
 }

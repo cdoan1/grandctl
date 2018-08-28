@@ -34,14 +34,15 @@ ci: lint test
 
 .PHONY: build
 build:
-	go build .
+	./sbin/build_platform.sh grandctl
 
 .PHONY: install
-install: build
+install:
+	go build .
 	go install
 
 .PHONY: deploy
-deploy: build install
-	scp ${GOPATH}/bin/grandctl root@${DEPLOY_TARGET}:/usr/local/bin
+deploy: 
+	scp ./dist/grandctl-linux-amd64 root@${DEPLOY_TARGET}:/usr/local/bin/grandctl
 
 .DEFAULT_GOAL := install

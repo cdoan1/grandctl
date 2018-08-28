@@ -64,7 +64,85 @@ grandctl uninstall --gate stable`,
 		if err != nil {
 			fmt.Println("Error occurred!!!")
 		}
+
+		fmt.Println("local: inception uninstall ")
+		// uninstall := dockerRunIcpUninstall(image)
+		// if uninstall != nil {
+		// 	fmt.Println("Error !!!")
+		// }
+
+		// local: docker clean up
+		fmt.Println("local: docker ps -a -q")
+		clean := dockerRemoveContainer()
+		if clean != nil {
+			fmt.Println("docker rm containers failed!!!")
+		}
+
+		// remote: docker clean up
+		// investigate running ssh via golang
+
 	},
+}
+
+func dockerRemoveContainer() error {
+	cmdRunner := exec.Command("docker", "ps", "-a", "-q")
+	cmdRunner.Dir = "/opt/ibm/cluster"
+	var stdout, stderr []byte
+	var errStdout, errStderr error
+	stdoutIn, _ := cmdRunner.StdoutPipe()
+	stderrIn, _ := cmdRunner.StderrPipe()
+	cmdRunner.Start()
+
+	go func() {
+		stdout, errStdout = copyAndCapture(os.Stdout, stdoutIn)
+	}()
+
+	go func() {
+		stderr, errStderr = copyAndCapture(os.Stderr, stderrIn)
+	}()
+
+	err := cmdRunner.Wait()
+	if err != nil {
+		log.Fatalf("cmd.Run() failed with %s\n", err)
+	}
+	if errStdout != nil || errStderr != nil {
+		log.Fatalf("failed to capture stdout or stderr\n")
+	}
+	outStr, errStr := string(stdout), string(stderr)
+	fmt.Printf("\nout:\n%s\nerr:\n%s\n", outStr, errStr)
+
+	return err
+}
+
+// docker run -e LICENSE=accept --net=host -t -v "$(pwd)":/installer/cluster $IMAGE uninstall
+func dockerRunIcpUninstall(image string) error {
+	cmdRunner := exec.Command("docker", "run", "-e", "LICENSE=accept", "--net=host", "-t", "-v", "/opt/ibm/cluster:/installer/cluster", image, "uninstall")
+	cmdRunner.Dir = "/opt/ibm/cluster"
+	var stdout, stderr []byte
+	var errStdout, errStderr error
+	stdoutIn, _ := cmdRunner.StdoutPipe()
+	stderrIn, _ := cmdRunner.StderrPipe()
+	cmdRunner.Start()
+
+	go func() {
+		stdout, errStdout = copyAndCapture(os.Stdout, stdoutIn)
+	}()
+
+	go func() {
+		stderr, errStderr = copyAndCapture(os.Stderr, stderrIn)
+	}()
+
+	err := cmdRunner.Wait()
+	if err != nil {
+		log.Fatalf("cmd.Run() failed with %s\n", err)
+	}
+	if errStdout != nil || errStderr != nil {
+		log.Fatalf("failed to capture stdout or stderr\n")
+	}
+	outStr, errStr := string(stdout), string(stderr)
+	fmt.Printf("\nout:\n%s\nerr:\n%s\n", outStr, errStr)
+
+	return err
 }
 
 // https://github.com/kjk/go-cookbook/blob/master/LICENSE
