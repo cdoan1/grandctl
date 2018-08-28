@@ -137,9 +137,9 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// installCmd.PersistentFlags().String("foo", "", "A help for foo")
-	uninstallCmd.PersistentFlags().String("gate", "daily", "Gate or Stage to work with, options are: integration, daily, edge, stable")
-	uninstallCmd.PersistentFlags().String("release", "3.1.0", "ICP release, options are: latest, 3.1.0, 2.1.0.3-ga, 2.1.0.2-ga")
-	uninstallCmd.PersistentFlags().String("arch", "amd64", "architecture, options are: amd64, ppc64le")
+	installCmd.PersistentFlags().String("gate", "daily", "Gate or Stage to work with, options are: integration, daily, edge, stable")
+	installCmd.PersistentFlags().String("release", "3.1.0", "ICP release, options are: latest, 3.1.0, 2.1.0.3-ga, 2.1.0.2-ga")
+	installCmd.PersistentFlags().String("arch", "amd64", "architecture, options are: amd64, ppc64le")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
