@@ -61,7 +61,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.grandctl.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/config.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -77,19 +77,26 @@ func initConfig() {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(home, err)
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".grandctl_extra" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".grandctl")
+		viper.SetConfigName("config")
+		viper.AddConfigPath("$HOME/.grandctl/") // call multiple times to add many search paths
+		viper.AddConfigPath("./.grandctl/")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.SetConfigType("yaml")
+	viper.AutomaticEnv()        // read in environment variables that match
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {             // Handle errors reading the config file
+		panic(fmt.Errorf("Fatal error config file: %s ", err))
+	}
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	fmt.Println(" Using config file:", viper.ConfigFileUsed())
+	fmt.Println(" Settings:", viper.AllSettings())
+	m := viper.AllSettings()
+	for k, v := range m {
+		fmt.Printf("key[%s] value[%s]\n", k, v)
 	}
 }

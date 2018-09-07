@@ -15,3 +15,21 @@ Let's start a golang command line project.
 
 1. add a new package dependency to gopkg.toml, after you have imported it
    `dep ensure -add github.com/spf13/cobra/cobra`
+
+# examples
+
+1. uninstall INCEPTION
+   ```
+   grandctl uninstall --gate stable
+   ```
+
+2. install INCEPTION
+   ```
+   grandctl install --gate stable
+   ```
+
+3. create config.yaml if one does not exists already
+   ```
+   grandctl cluster --config
+   ```
+

@@ -103,7 +103,12 @@ func dockerRunIcpInstall(image string) error {
 		noproxy = "127.0.0.1,mycluster.icp," + hosts
 	}
 	fmt.Println(httpproxy, httpsproxy, noproxy)
-	cmdRunner := exec.Command("docker", "run", "-e", "LICENSE=accept", "-e", httpproxy, "-e", httpsproxy, "-e", "no_proxy="+noproxy, "--net=host", "-t", "-v", "/opt/ibm/cluster:/installer/cluster", image, "install")
+	cmdRunner := exec.Command("docker", "run", "-e",
+		"LICENSE=accept", "-e", httpproxy, "-e", httpsproxy,
+		"-e", "no_proxy="+noproxy,
+		"--net=host", "-t",
+		"-v", "/opt/ibm/cluster/addon:/addon",
+		"-v", "/opt/ibm/cluster:/installer/cluster", image, "install")
 	cmdRunner.Dir = "/opt/ibm/cluster"
 	var stdout, stderr []byte
 	var errStdout, errStderr error

@@ -32,17 +32,21 @@ lint:
 
 ci: lint test
 
-.PHONY: build
-build:
+.PHONY: release
+release: clean
 	./sbin/build_platform.sh grandctl
 
-.PHONY: install
-install:
+.PHONY: clean
+clean:
+	rm -rf dist
+
+.PHONY: local
+local:
 	go build .
 	go install
 
 .PHONY: deploy
-deploy: 
+deploy: release
 	scp ./dist/grandctl-linux-amd64 root@${DEPLOY_TARGET}:/usr/local/bin/grandctl
 
-.DEFAULT_GOAL := install
+.DEFAULT_GOAL := release
