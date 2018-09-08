@@ -60,7 +60,7 @@ type conf struct {
 	VipIface              string `json:"vip_iface,omitempty" yaml:"vip_iface,omitempty"`
 }
 
-// logger := log.New(os.Stdout)
+var logger = log.New(os.Stdout).WithColor()
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
@@ -70,7 +70,7 @@ var initCmd = &cobra.Command{
 with default values.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		logger := log.New(os.Stdout).WithColor()
+		// logger := log.New(os.Stdout).WithColor()
 		logger.Infof("dumping default config.yaml from INCEPTION image")
 
 		image := imageName("stable", "amd64")
@@ -106,7 +106,7 @@ func init() {
 //
 func (c *conf) getConf() *conf {
 
-	logger := log.New(os.Stdout).WithColor()
+	// logger := log.New(os.Stdout).WithColor()
 
 	yamlFile, err := ioutil.ReadFile("config.yaml")
 	if err != nil {
@@ -161,7 +161,7 @@ func imageName(gate string, arch string) string {
 //
 // sudo docker run -e LICENSE=accept -v "$(pwd)":/data ibmcom/icp-inception:2.1.0.3 cp -r cluster /data
 func createConfigYaml(image string) error {
-	logger := log.New(os.Stdout).WithColor()
+	// logger := log.New(os.Stdout).WithColor()
 	cmdRunner := exec.Command("docker", "run", "-e",
 		"LICENSE=accept",
 		"--net=host", "-t",

@@ -25,6 +25,7 @@ import (
 
 var (
 	cfgFile string
+	debug   bool
 
 	// VERSION is set during build
 	VERSION string
@@ -62,6 +63,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/config.yaml)")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug logging")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -93,10 +95,18 @@ func initConfig() {
 		panic(fmt.Errorf("Fatal error config file: %s ", err))
 	}
 
-	fmt.Println(" Using config file:", viper.ConfigFileUsed())
-	fmt.Println(" Settings:", viper.AllSettings())
+	if debug {
+		logger.Info("debug logging: enabled")
+		logger.WithDebug()
+	} else {
+		logger.Warn("debug logging: disabled")
+		logger.WithoutDebug()
+	}
+
+	logger.Info("Using config file:", viper.ConfigFileUsed())
+	logger.Debug("Settings:", viper.AllSettings())
 	m := viper.AllSettings()
 	for k, v := range m {
-		fmt.Printf("key[%s] value[%s]\n", k, v)
+		logger.Debugf("key[%s] value[%s]\n", k, v)
 	}
 }

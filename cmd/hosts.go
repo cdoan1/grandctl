@@ -15,36 +15,31 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
-// createCmd represents the create command
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+// hostsCmd represents the hosts command
+var hostsCmd = &cobra.Command{
+	Use:   "hosts",
+	Short: "Manages the ansible hosts file",
+	Long: `Manages the ansible hosts file based on the various rules
+around the proxy group and the master group and the management group
+given the terraform state output JSON.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("create called")
+		logger.Info("parse terraform state file")
 	},
 }
 
 func init() {
-	configCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(hostsCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// hostsCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// hostsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
