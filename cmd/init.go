@@ -17,12 +17,13 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
+
 	"os"
 	"os/exec"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/withmandala/go-log"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -59,28 +60,29 @@ type conf struct {
 	VipIface              string `json:"vip_iface,omitempty" yaml:"vip_iface,omitempty"`
 }
 
+// logger := log.New(os.Stdout)
+
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "initialize the cluster configuration by creating the config.yaml ",
+	Short: "Initialize the cluster configuration by creating the config.yaml.",
 	Long: `Initialize the cluster configuration by creating the config.yaml
-with default values`,
+with default values.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		fmt.Println("check for cluster config.yaml exists")
-		fmt.Printf("\tdocker_username from config: %s\n", viper.Get("docker_username"))
+		logger := log.New(os.Stdout).WithColor()
+		logger.Infof("dumping default config.yaml from INCEPTION image")
 
-		// image := imageName("stable", "amd64")
-		// err := createConfigYaml(image)
-		// if err != nil {
-		// 	fmt.Println("Error !!!")
-		// }
+		image := imageName("stable", "amd64")
+		err := createConfigYaml(image)
+		if err != nil {
+			logger.Errorf("failed to create the config.yaml")
+		}
+
+		logger.Infof("update config with custom values from ~/.grandctl/config.yaml")
+
 		var c conf
-
 		c.getConf()
-
-		// fmt.Println(configCmd)
-
 	},
 }
 
@@ -104,13 +106,15 @@ func init() {
 //
 func (c *conf) getConf() *conf {
 
+	logger := log.New(os.Stdout).WithColor()
+
 	yamlFile, err := ioutil.ReadFile("config.yaml")
 	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
+		logger.Error("yamlFile.Get err #%v", err)
 	}
 	err = yaml.Unmarshal(yamlFile, c)
 	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
+		logger.Fatalf("Unmarshal: %v", err)
 	}
 
 	c.ChartRepo.AddOns.Header = viper.GetString("HEADER")
@@ -123,7 +127,7 @@ func (c *conf) getConf() *conf {
 	c.AnsibleUser = viper.GetString("ansible_user")
 	c.PrivateRegistryServer = viper.GetString("private_registry_server")
 
-	fmt.Println(c)
+	// fmt.Println(c)
 
 	// d, err := yaml.Marshal(&c)
 	// m := make(map[interface{}]interface{})
@@ -135,9 +139,9 @@ func (c *conf) getConf() *conf {
 
 	d, err := yaml.Marshal(&c)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		logger.Fatalf("error: %v", err)
 	}
-	fmt.Printf("--- m dump:\n%s\n\n", string(d))
+	logger.Infof("---\n%s\n\n", string(d))
 	return c
 }
 
@@ -157,6 +161,7 @@ func imageName(gate string, arch string) string {
 //
 // sudo docker run -e LICENSE=accept -v "$(pwd)":/data ibmcom/icp-inception:2.1.0.3 cp -r cluster /data
 func createConfigYaml(image string) error {
+	logger := log.New(os.Stdout).WithColor()
 	cmdRunner := exec.Command("docker", "run", "-e",
 		"LICENSE=accept",
 		"--net=host", "-t",
@@ -178,10 +183,10 @@ func createConfigYaml(image string) error {
 
 	err := cmdRunner.Wait()
 	if err != nil {
-		log.Fatalf("cmd.Run() failed with %s\n", err)
+		logger.Fatalf("cmd.Run() failed with %s\n", err)
 	}
 	if errStdout != nil || errStderr != nil {
-		log.Fatalf("failed to capture stdout or stderr\n")
+		logger.Fatalf("failed to capture stdout or stderr")
 	}
 	outStr, errStr := string(stdout), string(stderr)
 	fmt.Printf("\nout:\n%s\nerr:\n%s\n", outStr, errStr)

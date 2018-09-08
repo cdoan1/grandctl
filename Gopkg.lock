@@ -106,9 +106,28 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/withmandala/go-log"
+  packages = [
+    ".",
+    "buffer",
+    "colorful"
+  ]
+  revision = "8fd929c00d41b1baf7bd1485daefa5001b7a282b"
+  version = "v0.1.0"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  revision = "0709b304e793a5edb4a2c0145f281ecdc20838a4"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "4910a1d54f876d7b22162a85f4d066d3ee649450"
 
 [[projects]]
@@ -133,6 +152,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "96037bca80e04e4196aeff9b07654398fa0dcea3c6e2df4875238e4a8025eb7f"
+  inputs-digest = "b79a4b80b8dbb9d6a8af960f88fe3c84073e7ee18576ccc5fd13e1b23aa29487"
   solver-name = "gps-cdcl"
   solver-version = 1
