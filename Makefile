@@ -2,6 +2,7 @@ SOURCE_FILES?=./...
 TEST_PATTERN?=.
 TEST_OPTIONS?=
 DEPLOY_TARGET?=10.104.86.12
+DEPLOY_USER?=root
 OS=$(shell uname -s)
 
 export PATH := ./bin:$(PATH)
@@ -47,6 +48,11 @@ local:
 
 .PHONY: deploy
 deploy: release
-	scp ./dist/grandctl-linux-amd64 root@${DEPLOY_TARGET}:/usr/local/bin/grandctl
+ifeq ($(DEPLOY_USER),ubuntu)
+	scp ./dist/grandctl-linux-amd64 $(DEPLOY_USER)@$(DEPLOY_TARGET):/tmp
+	ssh -t $(DEPLOY_USER)@$(DEPLOY_TARGET) 'sudo cp /tmp/grandctl-linux-amd64 /usr/local/bin/grandctl'
+else
+	scp ./dist/grandctl-linux-amd64 $(DEPLOY_USER)@$(DEPLOY_TARGET):/usr/local/bin/grandctl
+endif
 
 .DEFAULT_GOAL := release

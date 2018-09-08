@@ -30,6 +30,6 @@ Let's start a golang command line project.
 
 3. create config.yaml if one does not exists already
    ```
-   grandctl cluster --config
+   grandctl init --gate stable 
    ```
 

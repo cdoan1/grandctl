@@ -2,3 +2,4 @@ grandctl
 vendor/
 dist/
 bin/
+.DS_Store
