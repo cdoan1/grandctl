@@ -62,13 +62,9 @@ type conf struct {
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "initialize the cluster configuration by creating the config.yaml ",
+	Long: `Initialize the cluster configuration by creating the config.yaml
+with default values`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		fmt.Println("check for cluster config.yaml exists")
@@ -117,11 +113,6 @@ func (c *conf) getConf() *conf {
 		log.Fatalf("Unmarshal: %v", err)
 	}
 
-	//
-	// TODO: we're hardcoding this here now just for development work,
-	// but this really needs to be read from the .grandctl/config.yaml
-	// and updated to the config.yaml
-	//
 	c.ChartRepo.AddOns.Header = viper.GetString("HEADER")
 	c.ChartRepo.AddOns.URL = viper.GetString("URL")
 	c.ImageRepo = viper.GetString("image_repo")
