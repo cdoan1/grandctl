@@ -24,7 +24,9 @@ var hostsCmd = &cobra.Command{
 	Short: "Manages the ansible hosts file",
 	Long: `Manages the ansible hosts file based on the various rules
 around the proxy group and the master group and the management group
-given the terraform state output JSON.`,
+given the terraform state output JSON. Let's look in the current folder
+for the terraform.tfstate file. We just want to read it for the keys
+related to MASTER, PROXY, WORKER, MANAGEMENT`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Info("parse terraform state file")
 	},
