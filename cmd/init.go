@@ -16,12 +16,48 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v2"
 )
+
+type conf struct {
+	AnsibleUser      string `json:"ansible_user,omitempty" yaml:"ansible_user,omitempty"`
+	AnsibleBecome    string `json:"ansible_become,omitempty" yaml:"ansible_become,omitempty"`
+	ClusterLbAddress string `json:"cluster_lb_address,omitempty" yaml:"cluster_lb_address,omitempty"`
+	ClusterVip       string `json:"cluster_vip,omitempty" yaml:"cluster_vip,omitempty"`
+	ChartRepo        struct {
+		AddOns struct {
+			Header string `json:"header" yaml:"header"`
+			URL    string `json:"url" yaml:"url"`
+		} `json:"addons,omitempty" yaml:"addons,omitempty"`
+	} `json:"chart_repo,omitempty" yaml:"chart_repo,omitempty"`
+	DefaultAdminUser     string   `json:"default_admin_user,omitempty" yaml:"default_admin_user,omitempty"`
+	DefaultAdminPassword string   `json:"default_admin_password,omitempty" yaml:"default_admin_password,omitempty"`
+	DockerUsername       string   `json:"docker_username,omitempty" yaml:"docker_username,omitempty"`
+	DockerPassword       string   `json:"docker_password,omitempty" yaml:"docker_password,omitempty"`
+	EtcdExtraArgs        []string `json:"etcd_extra_args" yaml:"etcd_extra_args"`
+	ImageRepo            string   `json:"image_repo,omitempty" yaml:"image_repo,omitempty"`
+	Managementservices   struct {
+		Istio                string `json:"istio" yaml:"istio"`
+		VulnerabilityAdvisor string `json:"vulnerability-advisor" yaml:"vulnerability-advisor"`
+		StorageGlusterfs     string `json:"storage-glusterfs" yaml:"storage-glusterfs"`
+		StorageMinio         string `json:"storage-minio" yaml:"storage-minio"`
+	} `json:"management_services" yaml:"management_services"`
+	NetworkType           string `json:"network_type" yaml:"network_type"`
+	PrivateRegistryEnable string `json:"private_registry_enable,omitempty" yaml:"private_registry_enable,omitempty"`
+	PrivateRegistryServer string `json:"private_registry_server,omitempty" yaml:"private_registry_server,omitempty"`
+	ProxyLbAddress        string `json:"proxy_lb_address,omitempty" yaml:"proxy_lb_address,omitempty"`
+	ProxyVipIface         string `json:"proxy_vip_iface,omitempty" yaml:"proxy_vip_iface,omitempty"`
+	ProxyVip              string `json:"proxy_vip,omitempty" yaml:"proxy_vip,omitempty"`
+	VipManager            string `json:"vip_manager" yaml:"vip_manager"`
+	VipIface              string `json:"vip_iface,omitempty" yaml:"vip_iface,omitempty"`
+}
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
@@ -34,12 +70,21 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
-		image := "hyc-cloud-private-stable-docker-local.artifactory.swg-devops.com/ibmcom-amd64/icp-inception:latest"
-		err := createConfigYaml(image)
-		if err != nil {
-			fmt.Println("Error !!!")
-		}
+
+		fmt.Println("check for cluster config.yaml exists")
+		fmt.Printf("\tdocker_username from config: %s\n", viper.Get("docker_username"))
+
+		// image := imageName("stable", "amd64")
+		// err := createConfigYaml(image)
+		// if err != nil {
+		// 	fmt.Println("Error !!!")
+		// }
+		var c conf
+
+		c.getConf()
+
+		// fmt.Println(configCmd)
+
 	},
 }
 
@@ -57,6 +102,68 @@ func init() {
 	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
+// marshal in the default INCEPTION config.yaml
+// and then add our custom settings based on our
+// .grandctl/config.yaml
+//
+func (c *conf) getConf() *conf {
+
+	yamlFile, err := ioutil.ReadFile("config.yaml")
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+	}
+	err = yaml.Unmarshal(yamlFile, c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+
+	//
+	// TODO: we're hardcoding this here now just for development work,
+	// but this really needs to be read from the .grandctl/config.yaml
+	// and updated to the config.yaml
+	//
+	c.ChartRepo.AddOns.Header = viper.GetString("HEADER")
+	c.ChartRepo.AddOns.URL = viper.GetString("URL")
+	c.ImageRepo = viper.GetString("image_repo")
+	c.DockerUsername = viper.GetString("docker_username")
+	c.DockerPassword = viper.GetString("docker_password")
+	c.PrivateRegistryEnable = "true"
+	c.AnsibleBecome = viper.GetString("ansible_become")
+	c.AnsibleUser = viper.GetString("ansible_user")
+	c.PrivateRegistryServer = viper.GetString("private_registry_server")
+
+	fmt.Println(c)
+
+	// d, err := yaml.Marshal(&c)
+	// m := make(map[interface{}]interface{})
+	// err = yaml.Unmarshal([]byte(yamlFile), &m)
+	// if err != nil {
+	// 	log.Fatalf("error: %v", err)
+	// }
+	// fmt.Printf("--- m:\n%v\n\n", m)
+
+	d, err := yaml.Marshal(&c)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	fmt.Printf("--- m dump:\n%s\n\n", string(d))
+	return c
+}
+
+// construct the appropriate artifactory url and return
+//
+func imageName(gate string, arch string) string {
+	repo := "hyc-cloud-private-" + gate + "-docker-local.artifactory.swg-devops.com"
+	imageName := repo + "/ibmcom/icp-inception-" + arch + ":latest"
+
+	if gate != "integration" {
+		imageName = repo + "/ibmcom-" + arch + "/icp-inception:latest"
+	}
+	return imageName
+}
+
+// dump the default INCEPTION config.yaml from the docker image
+//
 // sudo docker run -e LICENSE=accept -v "$(pwd)":/data ibmcom/icp-inception:2.1.0.3 cp -r cluster /data
 func createConfigYaml(image string) error {
 	cmdRunner := exec.Command("docker", "run", "-e",
