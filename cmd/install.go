@@ -15,9 +15,7 @@
 package cmd
 
 import (
-	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -35,16 +33,16 @@ and usage of using your command. For example:
 
 grandctl install --gate stable`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("install called")
+		logger.Infof("install called")
 
 		gate := cmd.Flag("gate").Value.String()
-		fmt.Println(" gate:", gate)
+		logger.Infof("gate:", gate)
 
 		release := cmd.Flag("release").Value.String()
-		fmt.Println(" release:", release)
+		logger.Infof("release:", release)
 
 		arch := cmd.Flag("arch").Value.String()
-		fmt.Println(" arch:", arch)
+		logger.Infof("arch:", arch)
 
 		repo := "hyc-cloud-private-" + gate + "-docker-local.artifactory.swg-devops.com"
 		image := repo + "/ibmcom/icp-inception-" + arch + ":" + "latest"
@@ -53,15 +51,12 @@ grandctl install --gate stable`,
 			image = repo + "/ibmcom-" + arch + "/icp-inception" + ":" + "latest"
 		}
 
-		fmt.Println(" repo:", repo)
-		fmt.Println(" image:", image)
-		fmt.Println("")
-		fmt.Println("")
+		logger.Infof("repo:", repo)
+		logger.Infof("image:", image)
 
-		fmt.Println("local: install inception")
 		icpinstall := dockerRunIcpInstall(image)
 		if icpinstall != nil {
-			fmt.Println("Error !!!")
+			logger.Errorf("Error running INCEPTION install")
 		}
 
 	},
@@ -76,39 +71,49 @@ func getHostList() (string, error) {
 		if k == "ungrouped" {
 			continue
 		}
-		fmt.Println(k)
+		logger.Infof(k)
 		hosts := v.Groups[k]
 		for host := range hosts {
-			// fmt.Println(hosts[host].Name)
 			hostList = append(hostList, hosts[host].Name)
 		}
 	}
 
 	str := strings.Join(hostList, ",")
 
-	// fmt.Println("hostList:", hostList)
-	// fmt.Println("str:", str)
+	// logger.Infof("hostList:", hostList)
+	// logger.Infof("str:", str)
 
 	return str, nil
 }
 
 // docker run -e LICENSE=accept --net=host -t -v "$(pwd)":/installer/cluster $IMAGE uninstall
+// if http_proxy is not set, then we're running the deployment from
 func dockerRunIcpInstall(image string) error {
-	httpproxy := "http_proxy=" + os.Getenv("http_proxy")
-	httpsproxy := "https_proxy=" + os.Getenv("https_proxy")
-	noproxy := os.Getenv("no_proxy")
-	if noproxy == "" {
-		hosts, _ := getHostList()
-		fmt.Println("hosts:", hosts)
-		noproxy = "127.0.0.1,mycluster.icp," + hosts
-	}
-	fmt.Println(httpproxy, httpsproxy, noproxy)
-	cmdRunner := exec.Command("docker", "run", "-e",
-		"LICENSE=accept", "-e", httpproxy, "-e", httpsproxy,
-		"-e", "no_proxy="+noproxy,
-		"--net=host", "-t",
+
+	cmdRunner := exec.Command("docker", "run", "-e", "LICENSE=accept", "--net=host", "-t",
 		"-v", "/opt/ibm/cluster/addon:/addon",
 		"-v", "/opt/ibm/cluster:/installer/cluster", image, "install")
+
+	if os.Getenv("http_proxy") != "" {
+		httpproxy := "http_proxy=" + os.Getenv("http_proxy")
+		httpsproxy := "https_proxy=" + os.Getenv("https_proxy")
+		noproxy := os.Getenv("no_proxy")
+		if noproxy == "" {
+			hosts, _ := getHostList()
+			logger.Infof("hosts:", hosts)
+			noproxy = "127.0.0.1,mycluster.icp," + hosts
+		}
+
+		logger.Infof(httpproxy, httpsproxy, noproxy)
+
+		cmdRunner = exec.Command("docker", "run", "-e",
+			"LICENSE=accept", "-e", httpproxy, "-e", httpsproxy,
+			"-e", "no_proxy="+noproxy,
+			"--net=host", "-t",
+			"-v", "/opt/ibm/cluster/addon:/addon",
+			"-v", "/opt/ibm/cluster:/installer/cluster", image, "install")
+	}
+
 	cmdRunner.Dir = "/opt/ibm/cluster"
 	var stdout, stderr []byte
 	var errStdout, errStderr error
@@ -126,13 +131,13 @@ func dockerRunIcpInstall(image string) error {
 
 	err := cmdRunner.Wait()
 	if err != nil {
-		log.Fatalf("cmd.Run() failed with %s\n", err)
+		logger.Fatalf("cmd.Run() failed with %s\n", err)
 	}
 	if errStdout != nil || errStderr != nil {
-		log.Fatalf("failed to capture stdout or stderr\n")
+		logger.Fatalf("failed to capture stdout or stderr\n")
 	}
 	outStr, errStr := string(stdout), string(stderr)
-	fmt.Printf("\nout:\n%s\nerr:\n%s\n", outStr, errStr)
+	logger.Infof("\nout:\n%s\nerr:\n%s\n", outStr, errStr)
 
 	return err
 }
